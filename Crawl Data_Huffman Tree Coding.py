@@ -16,19 +16,17 @@ def crawl_data_from_url(url):
 
 
 # Hàm loại bỏ code HTML, chỉ giữ lại văn bản trong thẻ chứa nội dung chính:
-def clean_html(raw_html):
+def clean_html(raw_html, tag):
     soup = BeautifulSoup(raw_html, 'html.parser')
 
-    # Cố gắng tìm phần nội dung chính, có thể nằm trong các thẻ class phổ biến như "content", "article", v.v.
-    content = soup.find(class_="content")                                           # Thay "content" bằng class cụ thể của trang web bạn muốn crawl
-    if not content:
-        content = soup.find('article')  # Nếu không tìm thấy class "content", thử tìm thẻ article
+    # Tìm thẻ người dùng chọn (article, content, div,...)
+    content = soup.find(tag)                                                       # Thay tag bằng thẻ cụ thể của trang web
 
     if content:
-        text = content.get_text()                                                   # Lấy toàn bộ văn bản, bỏ qua các code HTML
+        text = content.get_text()                                                  # Lấy toàn bộ văn bản, bỏ qua các code HTML
     else:
-        print("Không tìm thấy nội dung chính, dùng toàn bộ văn bản trang.")
-        text = soup.get_text()                                                      # Lấy toàn bộ văn bản nếu không tìm thấy nội dung chính
+        print(f"Không tìm thấy thẻ {tag}, dùng toàn bộ văn bản trang.")
+        text = soup.get_text()                                                     # Lấy toàn bộ văn bản nếu không tìm thấy thẻ
 
     return text
 
@@ -80,41 +78,39 @@ def calculate_min_bits(frequencies):
     return math.ceil(math.log2(total_chars))
 
 
+# Hàm lấy văn bản từ URL và thẻ HTML do người dùng nhập:
+def get_text(url, tag):
+    raw_html = crawl_data_from_url(url)
+    if raw_html:
+        print(f"Đã lấy dữ liệu thành công từ {url}")
+        return clean_html(raw_html, tag)
+    else:
+        print(f"Không thể lấy dữ liệu từ URL: {url}")
+        return ""
+
+
 # Hàm chính để chạy chương trình:
 if __name__ == "__main__":
-    # Nhập URL từ bàn phím
+    # Nhập URL và thẻ HTML từ bàn phím
     url = input("Nhập URL của trang web: ")
+    tag = input("Nhập thẻ HTML (ví dụ: 'article', 'content', 'div', v.v.): ")
 
-    # Crawl dữ liệu từ URL:
-    raw_html = crawl_data_from_url(url)
+    # Lấy văn bản từ URL và thẻ người dùng chỉ định
+    cleaned_text = get_text(url, tag)
 
-    if raw_html:
-        print("Đã lấy dữ liệu thành công, đang bắt đầu xử lý...")
-
-        # Loại bỏ code HTML và chỉ giữ lại nội dung chính:
-        cleaned_text = clean_html(raw_html)
-
+    if cleaned_text:
         # Đếm tần suất xuất hiện của các ký tự ASCII:
         frequencies = count_ascii_characters(cleaned_text)
 
         # Chia các nhóm tần suất gần nhau:
         grouped_frequencies = group_frequencies(frequencies)
 
-        # In kết quả nhóm tần suất:
-        print("* Nhóm các ký tự với tần suất gần bằng nhau:")
-        for group, chars in grouped_frequencies.items():
-            print(f"\nTần suất {group}:")
-            for char, freq in chars:
-                if char == ' ':
-                    print("'Space'", freq)
-                elif char == '\n':
-                    print("'Newline'", freq)
-                else:
-                    print(f"'{char}': {freq}")
+        # Trả kết quả dưới dạng dictionary:
+        result_dict = {group: dict(chars) for group, chars in grouped_frequencies.items()}
+        print("Kết quả nhóm các ký tự với tần suất gần bằng nhau:", result_dict)
 
         # Tính số bit tối thiểu cần để mã hóa:
         min_bits = calculate_min_bits(frequencies)
         print(f"\nSố bit tối thiểu cần thiết để mã hóa: {min_bits} bits")
-
     else:
-        print("Không thể lấy dữ liệu từ URL cung cấp.")
+        print("Không thể lấy văn bản từ URL cung cấp.")
