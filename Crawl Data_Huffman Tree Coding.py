@@ -27,7 +27,7 @@ def clean_html(raw_html, tag):
         text = soup.get_text(separator=' ', strip=True)                             # Lấy toàn bộ văn bản nếu không tìm thấy thẻ
 
     # Làm mịn văn bản
-    text = re.sub(r'\s+', ' ', text)                                    # Thay thế nhiều khoảng trắng thành một khoảng trắng
+    text = re.sub(r'\s+', ' ', text)                                        # Thay thế nhiều khoảng trắng thành một khoảng trắng
     return text
 
 # Hàm đếm tần suất xuất hiện của các ký tự ASCII:
