@@ -1,0 +1,110 @@
+import heapq
+import matplotlib.pyplot as plt
+
+class Node:
+    def __init__(self, char, freq):
+        self.char = char
+        self.freq = freq
+        self.left = None
+        self.right = None
+
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+
+def build_huffman_tree(frequencies):
+    heap = [Node(char, freq) for char, freq in frequencies.items()]
+    heapq.heapify(heap)
+
+    while len(heap) > 1:
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+        merged = Node(None, left.freq + right.freq)
+        merged.left = left
+        merged.right = right
+        heapq.heappush(heap, merged)
+
+    return heap[0]
+
+
+def generate_huffman_codes(node, prefix="", huffman_codes=None):
+    if huffman_codes is None:
+        huffman_codes = {}
+
+    if node is not None:
+        if node.char is not None:
+            huffman_codes[node.char] = prefix
+        else:
+            generate_huffman_codes(node.left, prefix + "0", huffman_codes)
+            generate_huffman_codes(node.right, prefix + "1", huffman_codes)
+
+    return huffman_codes
+
+
+def build_ascii8_from_huffman(node, bitstream=None):
+
+    if bitstream is None:
+        bitstream = []
+
+    if node is not None:
+        if node.char is not None:
+
+            bitstream.append('1')
+
+            bitstream.append(format(ord(node.char), '08b'))
+        else:
+
+            bitstream.append('0')
+            build_ascii8_from_huffman(node.left, bitstream)
+            build_ascii8_from_huffman(node.right, bitstream)
+
+    return ''.join(bitstream)
+
+
+def draw_huffman_tree(node, x=0, y=0, layer=1, ax=None):
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+    if node is not None:
+
+        ax.text(x, y, f'{node.char} ({node.freq})' if node.char else f'({node.freq})',
+                ha='center', va='center',
+                bbox=dict(boxstyle='round,pad=0.3', edgecolor='black', facecolor='lightgrey'))
+
+        if node.left is not None:
+            ax.plot([x, x - 1 / (2 ** layer)], [y - 0.1, y - 1], 'k-')
+            draw_huffman_tree(node.left, x - 1 / (2 ** layer), y - 1, layer + 1, ax)
+
+        if node.right is not None:
+            ax.plot([x, x + 1 / (2 ** layer)], [y - 0.1, y - 1], 'k-')
+            draw_huffman_tree(node.right, x + 1 / (2 ** layer), y - 1, layer + 1, ax)
+
+
+frequencies = {
+    ' ': 9419, '\n': 2228, 'e': 646, 't': 484, 'i': 465, 'o': 435,
+    'a': 412, 's': 404, 'n': 399, 'r': 368, 'l': 231, 'd': 213,
+    'h': 201, 'c': 198, 'u': 180, 'g': 120, 'm': 112, 'p': 110,
+    'N': 101, 'y': 94, 'C': 90, 'f': 84, 'A': 68, 'S': 68, 'w': 67,
+    'T': 59, 'v': 59, 'F': 55, 'b': 55, ',': 51, 'k': 46, 'W': 31,
+    '.': 30, '2': 27, 'E': 27, 'I': 27, 'M': 27, 'P': 24, 'D': 23,
+    'L': 23, 'V': 21, 'U': 20, '0': 17, 'O': 17, 'H': 16, 'B': 14,
+    'Y': 12, '-': 11, 'G': 10, '4': 9, 'R': 9, '1': 8, 'x': 8,
+}
+
+huffman_tree = build_huffman_tree(frequencies)
+
+huffman_codes = generate_huffman_codes(huffman_tree)
+
+print("Huffman Codes:")
+for char, code in huffman_codes.items():
+    print(f"{char}: {code}")
+
+ascii8_representation = build_ascii8_from_huffman(huffman_tree)
+print("\nASCII8 Representation of Huffman Tree:")
+print(ascii8_representation)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+draw_huffman_tree(huffman_tree, ax=ax)
+ax.set_title("Huffman Coding Tree")
+ax.axis('off') 
+plt.show()
