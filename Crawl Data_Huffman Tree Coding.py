@@ -4,7 +4,6 @@ import re
 from collections import Counter
 import math
 
-
 # Hàm lấy dữ liệu từ URL (sử dụng urllib):
 def crawl_data_from_url(url):
     try:
@@ -14,22 +13,22 @@ def crawl_data_from_url(url):
         print(f"Lỗi khi tải dữ liệu từ URL: {e}")
         return ""
 
-
 # Hàm loại bỏ code HTML, chỉ giữ lại văn bản trong thẻ chứa nội dung chính:
 def clean_html(raw_html, tag):
     soup = BeautifulSoup(raw_html, 'html.parser')
 
-    # Tìm thẻ người dùng chọn (article, content, div,...)
-    content = soup.find(tag)                                                       # Thay tag bằng thẻ cụ thể của trang web
+    # Tìm thẻ người dùng chọn (article, content, div,...):
+    content = soup.find(class_=tag)                                                 # Thay tag bằng thẻ cụ thể của trang web
 
     if content:
-        text = content.get_text()                                                  # Lấy toàn bộ văn bản, bỏ qua các code HTML
+        text = content.get_text(separator=' ', strip=True)                          # Lấy toàn bộ văn bản và loại bỏ thẻ HTML
     else:
         print(f"Không tìm thấy thẻ {tag}, dùng toàn bộ văn bản trang.")
-        text = soup.get_text()                                                     # Lấy toàn bộ văn bản nếu không tìm thấy thẻ
+        text = soup.get_text(separator=' ', strip=True)                             # Lấy toàn bộ văn bản nếu không tìm thấy thẻ
 
+    # Làm mịn văn bản
+    text = re.sub(r'\s+', ' ', text)                                    # Thay thế nhiều khoảng trắng thành một khoảng trắng
     return text
-
 
 # Hàm đếm tần suất xuất hiện của các ký tự ASCII:
 def count_ascii_characters(text):
@@ -46,7 +45,6 @@ def count_ascii_characters(text):
     ascii_frequencies = {chr(i): frequencies.get(chr(i), 0) for i in range(256)}
 
     return ascii_frequencies
-
 
 # Hàm chia nhóm các ký tự có tần suất gần nhau:
 def group_frequencies(frequencies, threshold=5):
@@ -71,12 +69,10 @@ def group_frequencies(frequencies, threshold=5):
 
     return grouped_frequencies
 
-
 # Hàm tính số bit tối thiểu cần thiết để mã hóa mỗi ký tự:
 def calculate_min_bits(frequencies):
     total_chars = sum(frequencies.values())
     return math.ceil(math.log2(total_chars))
-
 
 # Hàm lấy văn bản từ URL và thẻ HTML do người dùng nhập:
 def get_text(url, tag):
@@ -88,14 +84,13 @@ def get_text(url, tag):
         print(f"Không thể lấy dữ liệu từ URL: {url}")
         return ""
 
-
 # Hàm chính để chạy chương trình:
 if __name__ == "__main__":
     # Nhập URL và thẻ HTML từ bàn phím
     url = input("Nhập URL của trang web: ")
     tag = input("Nhập thẻ HTML (ví dụ: 'article', 'content', 'div', v.v.): ")
 
-    # Lấy văn bản từ URL và thẻ người dùng chỉ định
+    # Lấy văn bản từ URL và thẻ người dùng chỉ định:
     cleaned_text = get_text(url, tag)
 
     if cleaned_text:
