@@ -9,16 +9,27 @@ import math
 def crawl_data_from_url(url):
     try:
         with urllib.request.urlopen(url) as response:
-            return response.read().decode('utf-8')                      # Đọc và giải mã dữ liệu thành chuỗi
+            return response.read().decode('utf-8')                                  # Đọc và giải mã dữ liệu thành chuỗi
     except Exception as e:
         print(f"Lỗi khi tải dữ liệu từ URL: {e}")
         return ""
 
 
-# Hàm loại bỏ code HTML, chỉ giữ lại văn bản:
+# Hàm loại bỏ code HTML, chỉ giữ lại văn bản trong thẻ chứa nội dung chính:
 def clean_html(raw_html):
     soup = BeautifulSoup(raw_html, 'html.parser')
-    text = soup.get_text()  # Lấy toàn bộ văn bản, bỏ qua các thẻ HTML
+
+    # Cố gắng tìm phần nội dung chính, có thể nằm trong các thẻ class phổ biến như "content", "article", v.v.
+    content = soup.find(class_="content")                                           # Thay "content" bằng class cụ thể của trang web bạn muốn crawl
+    if not content:
+        content = soup.find('article')  # Nếu không tìm thấy class "content", thử tìm thẻ article
+
+    if content:
+        text = content.get_text()                                                   # Lấy toàn bộ văn bản, bỏ qua các code HTML
+    else:
+        print("Không tìm thấy nội dung chính, dùng toàn bộ văn bản trang.")
+        text = soup.get_text()                                                      # Lấy toàn bộ văn bản nếu không tìm thấy nội dung chính
+
     return text
 
 
@@ -80,7 +91,7 @@ if __name__ == "__main__":
     if raw_html:
         print("Đã lấy dữ liệu thành công, đang bắt đầu xử lý...")
 
-        # Loại bỏ code HTML:
+        # Loại bỏ code HTML và chỉ giữ lại nội dung chính:
         cleaned_text = clean_html(raw_html)
 
         # Đếm tần suất xuất hiện của các ký tự ASCII:
